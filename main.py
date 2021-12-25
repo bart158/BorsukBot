@@ -51,6 +51,8 @@ async def on_message(message):
         await message.channel.send('ja ci dam bajo jajo')
     if message.content.startswith('helikopter helikopter'):
         await message.channel.send('Para kofer, para kofer')
+    if message.content.startswith('despacito'):
+        await message.channel.send('quiero respirar tu cuello despacito')
     if message.content.startswith('Wesołych Świąt'):
         await message.channel.send('Nawzajem')
     if message.content.find('trans') >= 0 or message.content.find('Trans') >= 0 or message.content.find('TRANS')>= 0 :
