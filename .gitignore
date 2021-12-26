@@ -21,6 +21,7 @@ sdist/
 var/
 wheels/
 trash/
+data/
 *.egg-info/
 .installed.cfg
 *.egg

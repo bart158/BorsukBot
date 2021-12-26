@@ -6,6 +6,7 @@ import requests
 import json
 import random
 import os
+import shelve
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -23,7 +24,7 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 bot = commands.Bot(command_prefix = '?', description=description)
-unacceptable_words = ["słaby", "zły", "niedobry", "bez krwi i kości", "bublowaty",
+unacceptable_words = ["słaby", "zły", "bez krwi i kości", "bublowaty",
 "chałowaty", "chałowy", "denny", "do bani", "do chrzanu", "do kitu", "do luftu", "do niczego",
 "du dupy", "dziadowski", "funta kłaków niewart", "kiepskawy", "kiepski", "kijowy", "kulawy",
 "lichy", "lipny", "mało wart", "marny", "mierny", "nędzny", "nic nie wart", "niedobry", "nieklawy",
@@ -73,15 +74,16 @@ unacceptable_words = ["słaby", "zły", "niedobry", "bez krwi i kości", "bublow
 "poroniony", "zgubny", "kontestacyjny", "kontestatorski", "negatywny", "pejoratywny", "ujemny", "horrendalny", "gromowładny", "piorunujący", "zabójczy",
 "defetystyczny", "niechętny czemuś", "niechętny komuś", "rozsierdzony rozzłoszczony", "wściekły na coś", "wściekły na kogoś", "koślawy",
 "nieprawdziwy", "omyłkowy", "pomyłkowy", "przeinaczony", "przekłamany", "przekręcony", "wypaczony", "zafałszowany", "niekorzystny", "niepochlebny",
-"niechwalebny", "niedopuszczalny", "oburzający", "żenujący", "feralny", "niekompetentny", "karcący", "marsowaty", "oziębły", "przytłaczający", "deficytowy", "niedochodowy",
-"nieekonomiczny", "nieintratny", "nieopłacalny", "niepopłatny", "nierentowny", "niewydajny", "niewydolny", "niezyskowny", "wysokodeficytowy", "bezwartościowy", "byle jaki",
-"wstrząsający", "zaperzony", "nasrożony", "niebezpieczny", "podstępny", "szkodliwy", "zdegenerowany", "zdemoralizowany", "zepsuty", "budzący grozę", "mrożący krew w żyłach",
-"chmurnawy", "kłopotliwy", "niepocieszający", "przygniatający", "smutnawy", "zniechęcający", "agresywny", "pełen złej woli", "złego usposobienia", "niedostateczny", "felerny",
-"nieszczęsny", "demoralizujący", "niezdrowy", "bolesny", "ciężki", "dotkliwy", "drastyczny", "krzywdzący", "w afekcie", "ciemny", "nie wzbudzający zaufania", "przestępczy",
-"niedoskonały", "niepełnowartościowy", "ułomny", "złej jakości", "destrukcyjny", "nierad", "rozgoryczony", "zgorzkniały", "nieugięty", "nieustępliwy", "zacięty", "zajadły",
-"indolentny", "niedouczony", "nieobowiązkowy", "nierzetelny", "niesumienny", "źle pracujący", "nerwowy", "niecierpliwy", "nieopanowany", "zaminowany", "denerwujący", "drażniący",
-"uciążliwy", "nieczynny", "niesprawny", "popsuty", "uszkodzony", "wybrakowany", "zdefektowany", "amoralny", "bez serca", "cwaniacki", "mroczny", "wyklęty", "wykolejony",
-"źle usposobiony", "zasługujący na naganę", "mdły", "niejadalny", "niesmaczny", "niestrawny", "niezjadliwy", "kiepskiej jakości", "gwałtowny", "zaciekły", "zapamiętały",
+"niechwalebny", "niedopuszczalny", "oburzający", "żenujący", "feralny", "niekompetentny", "karcący", "marsowaty", "oziębły", "przytłaczający", "deficytowy",
+"niedochodowy", "nieekonomiczny", "nieintratny", "nieopłacalny", "niepopłatny", "nierentowny", "niewydajny", "niewydolny", "niezyskowny", "wysokodeficytowy",
+"bezwartościowy", "byle jaki", "wstrząsający", "zaperzony", "nasrożony", "niebezpieczny", "podstępny", "szkodliwy", "zdegenerowany", "zdemoralizowany",
+"zepsuty", "budzący grozę", "mrożący krew w żyłach", "chmurnawy", "kłopotliwy", "niepocieszający", "przygniatający", "smutnawy", "zniechęcający", "agresywny",
+"pełen złej woli", "złego usposobienia", "niedostateczny", "felerny", "nieszczęsny", "demoralizujący", "niezdrowy", "bolesny", "ciężki", "dotkliwy", "drastyczny",
+"krzywdzący", "w afekcie", "ciemny", "nie wzbudzający zaufania", "przestępczy", "niedoskonały", "niepełnowartościowy", "ułomny", "złej jakości", "destrukcyjny",
+"nierad", "rozgoryczony", "zgorzkniały", "nieugięty", "nieustępliwy", "zacięty", "zajadły", "indolentny", "niedouczony", "nieobowiązkowy", "nierzetelny",
+"niesumienny", "źle pracujący", "nerwowy", "niecierpliwy", "nieopanowany", "zaminowany", "denerwujący", "drażniący", "uciążliwy", "nieczynny", "niesprawny",
+"popsuty", "uszkodzony", "wybrakowany", "zdefektowany", "amoralny", "bez serca", "cwaniacki", "mroczny", "wyklęty", "wykolejony", "źle usposobiony",
+"zasługujący na naganę", "mdły", "niejadalny", "niesmaczny", "niestrawny", "niezjadliwy", "kiepskiej jakości", "gwałtowny", "zaciekły", "zapamiętały",
 "morderczy", "pieski", "pożałowania godny", "psi", "nie do przyjęcia", "nie nadający się", "nieakceptowalny", "przynoszący straty", "nie najlepszy", "niedostosowany",
 "niewychowany", "cienki", "pozagatunkowy", "zawodny", "bardzo zły", "kompromitujący", "śmiertelny", "zjadliwy" ]
 
@@ -130,6 +132,21 @@ async def on_message(message):
                 credit_score_counter_popus += 1
         if credit_score_counter_popus > 0:
             await message.reply("Obraziłeś Króla Popsona! Twój wynik kredytu społecznego został obniożony o " + str(credit_score_counter_popus) + " punktów.")
+            author_id = str(message.author.id)
+            if not os.path.exists(os.path.join("data", "credit_score")):
+                os.makedirs(os.path.join("data", "credit_score"))
+            credit_score = shelve.open(os.path.join("data", "credit_score", "credit_score"))
+            print(credit_score)
+            print("--------")
+            if author_id in credit_score:
+                credit_score[author_id] -= credit_score_counter_popus
+            else:
+                credit_score[author_id] = 0
+                credit_score[author_id] -= credit_score_counter_popus
+            print(credit_score[author_id])
+            print("--------")
+            print(credit_score)
+            print("--------")
 
     await bot.process_commands(message)
 
