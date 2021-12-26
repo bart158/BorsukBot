@@ -57,7 +57,7 @@ unacceptable_words = ["słaby", "zły", "bez krwi i kości", "bublowaty",
 "alarmujący", "apokaliptyczny", "czarny", "fatalistyczny", "grobowy", "kapitulancki", "karawaniarski", "kasandryczny",
 "katastroficzny", "niefortunny", "niepokojący", "niepomyślny", "pogrzebowy", "ponury", "przygnębiający", "złowieszczy", "złowrogi",
 "złowróżbny", "żałobny", "dramatyczny", "hiobowy", "panikarski", "pesymistyczny", "posępny", "wizyjny", "cholerny", "kolosalny", "nadzwyczajny",
-"niemożliwy", "nieopisany", "niepojęty", "niesłychany", "niezwykły", "ogromny", "okrutny", "pioruński", "szalony", "wielki", "wyjątkowy", "hańbiący",
+"niemożliwy", "nieopisany", "niepojęty", "niesłychany", "niezwykły", "ogromny", "okrutny", "pioruński", "szalony", "wyjątkowy", "hańbiący",
 "niski", "uwłaczający", "nadąsany", "najeżony", "obrażony", "jowiszowy", "marsowy", "sataniczny", "bezwstydny", "nieuczciwy", "Belzebub", "bies", "Boruta",
 "czart", "czort", "demon", "demon zła", "diabeł", "kaduk", "książę ciemności", "kusiciel", "kusy", "licho", "Lucyfer", "Lucyper", "mefisto", "moc nieczysta",
 "moc piekielna", "nieczysty duch", "Rokita", "siła nieczysta", "syn ciemności", "szatan", "upadły anioł", "wódz złych duchów", "złe",
@@ -131,22 +131,23 @@ async def on_message(message):
             if message_lower_case.find(i) >= 0:
                 credit_score_counter_popus += 1
         if credit_score_counter_popus > 0:
-            await message.reply("Obraziłeś Króla Popsona! Twój wynik kredytu społecznego został obniożony o " + str(credit_score_counter_popus) + " punktów.")
+            if credit_score_counter_popus == 1:
+                await message.reply("Obraziłeś Króla Popsona! Twój wynik kredytu społecznego został obniżony o " + str(credit_score_counter_popus) + " punkt.")
+            elif credit_score_counter_popus > 1 and credit_score_counter_popus < 5:
+                await message.reply("Obraziłeś Króla Popsona! Twój wynik kredytu społecznego został obniżony o " + str(credit_score_counter_popus) + " punkty.")
+            else:
+                await message.reply("Obraziłeś Króla Popsona! Twój wynik kredytu społecznego został obniżony o " + str(credit_score_counter_popus) + " punktów.")
             author_id = str(message.author.id)
             if not os.path.exists(os.path.join("data", "credit_score")):
                 os.makedirs(os.path.join("data", "credit_score"))
             credit_score = shelve.open(os.path.join("data", "credit_score", "credit_score"))
-            print(credit_score)
-            print("--------")
             if author_id in credit_score:
                 credit_score[author_id] -= credit_score_counter_popus
             else:
                 credit_score[author_id] = 0
                 credit_score[author_id] -= credit_score_counter_popus
-            print(credit_score[author_id])
-            print("--------")
-            print(credit_score)
-            print("--------")
+            if credit_score[author_id] < -10:
+                await message.channel.send("Użytkownik @" + message.author.name + " ma wynik kredytu społecznego poniżej -10!")
 
     await bot.process_commands(message)
 
