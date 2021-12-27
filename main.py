@@ -1,12 +1,15 @@
 import discord
+from discord import permissions
 from discord.ext import commands
 
 import logging
+from discord.ext.commands.errors import BadInviteArgument
 import requests
 import json
 import random
 import os
 import shelve
+import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -126,10 +129,25 @@ async def on_message(message):
         'Kochasz grać w drewutnię!', 'Masz większe ego niż Tymek lufę!', 'Jesteś fanboyem anime!', 'https://i.ibb.co/0Vzcpt9/Screenshot-2021-12-25-163816.png']
         await message.reply(random.choice(insults))
     if(message_lower_case.find("popuś") >= 0):
+
         credit_score_counter_popus = 0
+        list_of_roles = message.guild.roles
+        role_exists = False
+        role_name = "Wróg Publiczny"
+
+        for i in list_of_roles:
+            if i.name == role_name:
+                role_exists = True
+                banish_role = i
+                break
+        
+        if not role_exists:
+            banish_role = await message.guild.create_role(name = role_name, colour = discord.Colour.greyple(), reason = "To rightfully silence people", permissions = discord.Permissions.none())
+
         for i in unacceptable_words:
             if message_lower_case.find(i) >= 0:
                 credit_score_counter_popus += 1
+        
         if credit_score_counter_popus > 0:
             if credit_score_counter_popus == 1:
                 await message.reply("Obraziłeś Króla Popsona! Twój wynik kredytu społecznego został obniżony o " + str(credit_score_counter_popus) + " punkt.")
@@ -146,8 +164,13 @@ async def on_message(message):
             else:
                 credit_score[author_id] = 0
                 credit_score[author_id] -= credit_score_counter_popus
-            if credit_score[author_id] < -10:
-                await message.channel.send("Użytkownik @" + message.author.name + " ma wynik kredytu społecznego poniżej -10!")
+            if credit_score[author_id] < -30:
+                await message.channel.send("Użytkownik @" + message.author.name + " ma wynik kredytu społecznego poniżej -30! Zostajesz wysłany na minutową banicję.")
+                await message.author.add_roles(banish_role)
+                timeout = (datetime.datetime.utcnow() + datetime.timedelta(minutes=1))
+                await discord.utils.sleep_until(timeout)
+                await message.author.remove_roles(banish_role)
+                await message.channel.send("Czas minał. Możesz wrócić z banicji")
 
     await bot.process_commands(message)
 
